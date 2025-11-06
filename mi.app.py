@@ -2,45 +2,33 @@ import streamlit as st
 import json
 import os
 from groq import Groq
-import time
 
 st.set_page_config(page_title="IA Bauti Talentotech", page_icon="🤖", layout="wide")
 st.title("🤖 IA Bauti Talentotech")
 
-# ========================
-# Configuración del cliente
-# ========================
 api_key = st.secrets["GROQ_API_KEY"]
 client = Groq(api_key=api_key)
 
-# Archivo para persistir historial
-HISTORIAL_FILE = "historial_chat.json"
+archivo_historial = "historial_chat.json"
 
-# Cargar historial
-if os.path.exists(HISTORIAL_FILE):
-    with open(HISTORIAL_FILE, "r", encoding="utf-8") as f:
+if os.path.exists(archivo_historial):
+    with open(archivo_historial, "r", encoding="utf-8") as f:
         historial = json.load(f)
 else:
     historial = []
 
-def guardar_historial():
-    with open(HISTORIAL_FILE, "w", encoding="utf-8") as f:
+def guardar():
+    with open(archivo_historial, "w", encoding="utf-8") as f:
         json.dump(historial, f, ensure_ascii=False, indent=2)
 
-# ========================
-# Estilos CSS para chat
-# ========================
 st.markdown("""
 <style>
-/* Contenedor del chat */
-.chat-container {
+.chat-contenedor {
     max-height: 500px;
     overflow-y: auto;
     padding: 10px;
 }
-
-/* Burbujas */
-.bubble-user {
+.burbuja-yo {
     text-align: right;
     background-color: #075E54;
     color: white;
@@ -51,7 +39,7 @@ st.markdown("""
     float: right;
     clear: both;
 }
-.bubble-ia {
+.burbuja-ia {
     text-align: left;
     background-color: #262626;
     color: white;
@@ -62,9 +50,7 @@ st.markdown("""
     float: left;
     clear: both;
 }
-
-/* Barra de chat fija abajo */
-.input-container {
+.input-contenedor {
     position: fixed;
     bottom: 10px;
     width: 95%;
@@ -90,64 +76,41 @@ button {
 </style>
 """, unsafe_allow_html=True)
 
-# ========================
-# Mostrar historial
-# ========================
-st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+st.markdown('<div class="chat-contenedor">', unsafe_allow_html=True)
 for chat in historial:
     if chat["rol"] == "user":
-        st.markdown(f'<div class="bubble-user">{chat["mensaje"]}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="burbuja-yo">{chat["mensaje"]}</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'<div class="bubble-ia">{chat["mensaje"]}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="burbuja-ia">{chat["mensaje"]}</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ========================
-# Botón para borrar historial
-# ========================
 if st.button("🗑 Borrar historial"):
     historial = []
-    if os.path.exists(HISTORIAL_FILE):
-        os.remove(HISTORIAL_FILE)
+    if os.path.exists(archivo_historial):
+        os.remove(archivo_historial)
     st.experimental_rerun()
 
-# ========================
-# Barra de chat
-# ========================
-st.markdown('<div class="input-container">', unsafe_allow_html=True)
+st.markdown('<div class="input-contenedor">', unsafe_allow_html=True)
 mensaje = st.text_input("", key="mensaje_input", placeholder="Escribí tu mensaje y presioná Enter")
 enviar = st.button("Enviar")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ========================
-# Procesar mensaje
-# ========================
 if mensaje:
     historial.append({"rol": "user", "mensaje": mensaje})
-    guardar_historial()
+    guardar()
     
-    # Contenedor temporal para mostrar "pensando"
-    ia_placeholder = st.empty()
-    ia_placeholder.markdown('<div class="bubble-ia">💬 La super IA de Bauti está pensando...</div>', unsafe_allow_html=True)
-    st.experimental_rerun()  # Esto solo refresca la barra de chat (seguro ahora que está fuera del flujo principal)
+    placeholder = st.empty()
+    placeholder.markdown('<div class="burbuja-ia">💬 La super IA de Bauti está pensando...</div>', unsafe_allow_html=True)
 
-# ========================
-# Generar respuesta de la IA
-# ========================
-if historial and historial[-1]["rol"] == "user":
     try:
-        respuesta = client.chat.completions.create(
+        resp = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": "Sos una IA amable y útil creada por Bauti."},
-                *[
-                    {"role": item["rol"], "content": item["mensaje"]}
-                    for item in historial
-                ]
-            ],
+            messages=[{"role": "system", "content": "Sos una IA buena onda y útil."}] +
+                     [{"role": h["rol"], "content": h["mensaje"]} for h in historial]
         )
-        ia_mensaje = respuesta.choices[0].message.content
-        historial.append({"rol": "assistant", "mensaje": ia_mensaje})
-        guardar_historial()
-        ia_placeholder.markdown(f'<div class="bubble-ia">{ia_mensaje}</div>', unsafe_allow_html=True)
+        ia_msg = resp.choices[0].message.content
+        historial.append({"rol": "assistant", "mensaje": ia_msg})
+        guardar()
+        placeholder.markdown(f'<div class="burbuja-ia">{ia_msg}</div>', unsafe_allow_html=True)
     except Exception as e:
-        ia_placeholder.error(f"❌ Error al generar respuesta: {e}")
+        placeholder.error(f"Error: {e}")

@@ -2,17 +2,15 @@ import streamlit as st
 
 st.set_page_config(page_title="IA de Bauti", page_icon="🤖", layout="wide")
 
-# --- css estilo warap ---
+# --- css oscuro tipo warap ---
 st.markdown("""
     <style>
-        body {
-            background-color: #ECE5DD;
-        }
-        .main {
-            background-color: #ECE5DD;
+        body, .main {
+            background-color: #111B21;
+            color: white;
         }
         .chat-box {
-            background-color: #ffffff;
+            background-color: #0B141A;
             border-radius: 12px;
             padding: 15px;
             max-width: 600px;
@@ -22,39 +20,58 @@ st.markdown("""
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.4);
         }
         .user-msg {
-            background-color: #DCF8C6;
-            padding: 10px;
-            border-radius: 10px;
+            background-color: #005C4B;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 10px 10px 0px 10px;
             margin: 5px 0;
             align-self: flex-end;
-            max-width: 80%;
-            text-align: right;
+            max-width: 75%;
+            word-wrap: break-word;
         }
         .bot-msg {
-            background-color: #F1F0F0;
-            padding: 10px;
-            border-radius: 10px;
+            background-color: #202C33;
+            color: #E9EDEF;
+            padding: 10px 14px;
+            border-radius: 10px 10px 10px 0px;
             margin: 5px 0;
             align-self: flex-start;
-            max-width: 80%;
-            text-align: left;
+            max-width: 75%;
+            word-wrap: break-word;
         }
         .message-input {
-            background-color: #ffffff;
-            padding: 10px;
+            background-color: #202C33;
+            padding: 12px;
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
         }
         .stTextInput>div>div>input {
+            background-color: #2A3942;
+            color: white;
             border-radius: 20px;
-            border: 1px solid #ccc;
+            border: none;
             padding: 10px 15px;
+        }
+        .stTextInput>div>div>input:focus {
+            outline: none !important;
+            border: 1px solid #00A884;
+        }
+        .stButton>button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 18px;
+            cursor: pointer;
+        }
+        .stButton>button:hover {
+            background-color: #029E79;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -78,7 +95,7 @@ def responder(mensaje):
     if "hola" in msg:
         return "¡Hola! ¿Cómo estás? 😄"
     elif "como estas" in msg or "cómo estás" in msg:
-        return "¡Genial! Estoy funcionando correctamente, gracias por preguntar. No tengo sentimientos como los humanos, pero siempre estoy acá para ayudarte. ¿Vos cómo estás?"
+        return "Estoy bien, gracias por preguntar 😌 ¿y vos?"
     elif "bauti" in msg:
         return "Bauti es mi creador 😎. Un poco colgado, pero con buenas ideas."
     elif "adiós" in msg or "chau" in msg:
@@ -95,7 +112,7 @@ for msg in st.session_state.mensajes:
         st.markdown(f"<div class='bot-msg'>{msg['texto']}</div>", unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- input y botón de envío ---
+# --- input y botón ---
 st.markdown('<div class="message-input">', unsafe_allow_html=True)
 with st.form(key="formulario_chat", clear_on_submit=True):
     mensaje_usuario = st.text_input("Escribí tu mensaje", label_visibility="collapsed")

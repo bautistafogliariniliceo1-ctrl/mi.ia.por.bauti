@@ -19,7 +19,7 @@ if st.button("Responder"):
         try:
             # Ejemplo de uso con el modelo de Groq
             respuesta = client.chat.completions.create(
-                model="llama3-8b-8192",
+                model="llama-3.3-70b-versatile",
                 messages=[
                     {"role": "system", "content": "Sos una IA amable y útil creada por Bauti."},
                     {"role": "user", "content": pregunta},
@@ -33,3 +33,4 @@ if st.button("Responder"):
             st.error(f"❌ Error al generar respuesta: {e}")
     else:
         st.warning("Por favor escribí una pregunta antes de presionar 'Responder'.")
+

@@ -1,58 +1,81 @@
 import streamlit as st
 import openai
 
-st.set_page_config(page_title="IA de Bauti", page_icon="🤖", layout="wide")
+# Configuración general
+st.set_page_config(page_title="IA de Bauti", page_icon="🤖", layout="centered")
 
-# --- estilo tipo warap ---
+# --- Estilos visuales tipo ChatGPT ---
 st.markdown("""
 <style>
 body, .main {
-    background-color: #111B21;
-    color: white;
-    padding-bottom: 100px; /* espacio para input fijo */
+    background-color: #121212;
+    color: #EAEAEA;
+    font-family: 'Inter', sans-serif;
 }
-.user-msg {
-    background-color: #005C4B;
-    color: white;
-    padding: 10px 14px;
-    border-radius: 10px 10px 0 10px;
-    margin: 5px 0;
-    max-width: 75%;
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-bottom: 120px;
+}
+
+.message {
+    padding: 12px 18px;
+    border-radius: 12px;
+    max-width: 80%;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+.user {
     align-self: flex-end;
-    word-wrap: break-word;
+    background: #005C4B;
+    color: white;
 }
-.bot-msg {
-    background-color: #202C33;
-    color: #E9EDEF;
-    padding: 10px 14px;
-    border-radius: 10px 10px 10px 0;
-    margin: 5px 0;
-    max-width: 75%;
+
+.bot {
     align-self: flex-start;
-    word-wrap: break-word;
+    background: #1E1E1E;
+    color: #EAEAEA;
 }
-.message-input {
+
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(5px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+.input-container {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: #202C33;
-    padding: 12px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+    background-color: #1E1E1E;
+    padding: 15px 20px;
+    border-top: 1px solid #2F2F2F;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
-.stTextInput>div>div>input {
-    background-color: #2A3942;
+
+.stTextInput > div > div > input {
+    background-color: #2A2A2A;
     color: white;
     border-radius: 20px;
     border: none;
     padding: 10px 15px;
-    width: 80%;
+    width: 100%;
 }
-.stTextInput>div>div>input:focus {
+
+.stTextInput > div > div > input:focus {
     outline: none !important;
     border: 1px solid #00A884;
 }
-.stButton>button {
+
+.stButton > button {
     background-color: #00A884;
     color: white;
     border: none;
@@ -60,54 +83,57 @@ body, .main {
     padding: 8px 18px;
     cursor: pointer;
 }
-.stButton>button:hover {
+
+.stButton > button:hover {
     background-color: #029E79;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# --- API Key OpenAI ---
+# --- Configuración OpenAI ---
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# --- historial ---
+# --- Inicializar historial ---
 if "mensajes" not in st.session_state:
     st.session_state.mensajes = [
-        {"autor": "bot", "texto": "Hola Tomás, te he estado esperando... soy la IA de Bauti. El muchacho aunque sea colgado se esforzó bastante para crear todo esto que ves, así que espero que pueda aprobar. ¿Me querés preguntar algo?"}
+        {"autor": "bot", "texto": "Hola Tomás 👋, soy la IA de Bauti. Me alegra que estés acá, el muchacho se rompió el alma programando esto. ¿Querés charlar conmigo?"}
     ]
 
-# --- funcion para generar respuesta automática ---
+# --- Función para generar respuesta ---
 def generar_respuesta(prompt):
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # o "gpt-4"
+            model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "Sos la IA de Bauti. Respondé natural, con humor, onda de amigo, no aburrido."},
+                {"role": "system", "content": "Sos la IA de Bauti. Respondé como una IA cercana, amigable y natural, con el estilo de ChatGPT pero más relajada."},
                 *[
-                    {"role": "user" if m["autor"]=="user" else "assistant", "content": m["texto"]}
+                    {"role": "user" if m["autor"] == "user" else "assistant", "content": m["texto"]}
                     for m in st.session_state.mensajes
                 ],
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=250,
-            temperature=0.9
+            temperature=0.8,
+            max_tokens=300
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        return f"Error: {e}"
+        return f"Ups, hubo un error: {e}"
 
-# --- motrar chat ---
+# --- Mostrar mensajes ---
+st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
 for msg in st.session_state.mensajes:
-    clase = "user-msg" if msg["autor"] == "user" else "bot-msg"
-    st.markdown(f"<div class='{clase}'>{msg['texto']}</div>", unsafe_allow_html=True)
+    clase = "user" if msg["autor"] == "user" else "bot"
+    st.markdown(f"<div class='message {clase}'>{msg['texto']}</div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
-# --- barra de input ---
-st.markdown('<div class="message-input">', unsafe_allow_html=True)
-with st.form("form_chat", clear_on_submit=True):
-    mensaje = st.text_input("Escribí tu mensaje", label_visibility="collapsed")
+# --- Input de mensaje ---
+st.markdown('<div class="input-container">', unsafe_allow_html=True)
+with st.form("chat_form", clear_on_submit=True):
+    mensaje = st.text_input("Escribí algo...", label_visibility="collapsed")
     enviar = st.form_submit_button("Enviar")
     if enviar and mensaje.strip():
         st.session_state.mensajes.append({"autor": "user", "texto": mensaje})
         respuesta = generar_respuesta(mensaje)
         st.session_state.mensajes.append({"autor": "bot", "texto": respuesta})
         st.experimental_rerun()
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)

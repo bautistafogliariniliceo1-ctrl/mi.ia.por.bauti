@@ -1,6 +1,4 @@
 import streamlit as st
-import json
-import os
 from groq import Groq
 
 st.set_page_config(page_title="IA Bauti Talentotech", page_icon="🤖", layout="wide")
@@ -9,18 +7,11 @@ st.title("🤖 IA Bauti Talentotech")
 api_key = st.secrets["GROQ_API_KEY"]
 client = Groq(api_key=api_key)
 
-archivo_historial = "historial_chat.json"
+# inicializar historial en la sesión
+if "historial" not in st.session_state:
+    st.session_state.historial = []
 
-if os.path.exists(archivo_historial):
-    with open(archivo_historial, "r", encoding="utf-8") as f:
-        historial = json.load(f)
-else:
-    historial = []
-
-def guardar():
-    with open(archivo_historial, "w", encoding="utf-8") as f:
-        json.dump(historial, f, ensure_ascii=False, indent=2)
-
+# estilos tipo WhatsApp
 st.markdown("""
 <style>
 .chat-contenedor {
@@ -76,41 +67,36 @@ button {
 </style>
 """, unsafe_allow_html=True)
 
+# mostrar historial arriba de la barra de chat
 st.markdown('<div class="chat-contenedor">', unsafe_allow_html=True)
-for chat in historial:
+for chat in st.session_state.historial:
     if chat["rol"] == "user":
         st.markdown(f'<div class="burbuja-yo">{chat["mensaje"]}</div>', unsafe_allow_html=True)
     else:
         st.markdown(f'<div class="burbuja-ia">{chat["mensaje"]}</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-if st.button("🗑 Borrar historial"):
-    historial = []
-    if os.path.exists(archivo_historial):
-        os.remove(archivo_historial)
-    st.experimental_rerun()
-
+# barra de chat
 st.markdown('<div class="input-contenedor">', unsafe_allow_html=True)
 mensaje = st.text_input("", key="mensaje_input", placeholder="Escribí tu mensaje y presioná Enter")
 enviar = st.button("Enviar")
 st.markdown('</div>', unsafe_allow_html=True)
 
+# procesar mensaje
 if mensaje:
-    historial.append({"rol": "user", "mensaje": mensaje})
-    guardar()
+    st.session_state.historial.append({"rol": "user", "mensaje": mensaje})
     
     placeholder = st.empty()
     placeholder.markdown('<div class="burbuja-ia">💬 La super IA de Bauti está pensando...</div>', unsafe_allow_html=True)
-
+    
     try:
         resp = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "system", "content": "Sos una IA buena onda y útil."}] +
-                     [{"role": h["rol"], "content": h["mensaje"]} for h in historial]
+                     [{"role": h["rol"], "content": h["mensaje"]} for h in st.session_state.historial]
         )
         ia_msg = resp.choices[0].message.content
-        historial.append({"rol": "assistant", "mensaje": ia_msg})
-        guardar()
+        st.session_state.historial.append({"rol": "assistant", "mensaje": ia_msg})
         placeholder.markdown(f'<div class="burbuja-ia">{ia_msg}</div>', unsafe_allow_html=True)
     except Exception as e:
         placeholder.error(f"Error: {e}")

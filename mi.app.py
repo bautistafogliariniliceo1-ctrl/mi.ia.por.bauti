@@ -1,126 +1,96 @@
 import streamlit as st
-from groq import Groq
+from datetime import datetime
 
-st.set_page_config(page_title="IA Bauti Talentotech", page_icon="🤖", layout="wide")
-st.title("🤖 IA Bauti Talentotech")
+st.set_page_config(page_title="IA de Bauti", page_icon="🤖", layout="wide")
 
-api_key = st.secrets["GROQ_API_KEY"]
-client = Groq(api_key=api_key)
-
-# historial con mensaje inicial de la IA
-if "historial" not in st.session_state:
-    st.session_state.historial = [
-        {"rol": "assistant", "mensaje": "Hola Tomás, te he estado esperando... soy la IA de Bauti. El muchacho aunque sea colgado se esforzó bastante para crear todo esto que ves, así que espero que pueda aprobar. ¿Me querés preguntar algo?"}
-    ]
-
-# estilos tipo warap
+# --- css estilo warap ---
 st.markdown("""
-<style>
-.chat-contenedor {
-    max-height: 70vh;
-    overflow-y: auto;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-}
-.burbuja-yo {
-    text-align: right;
-    background-color: #075E54;
-    color: white;
-    padding: 10px;
-    border-radius: 15px;
-    margin: 5px 0;
-    max-width: 70%;
-    align-self: flex-end;
-}
-.burbuja-ia {
-    text-align: left;
-    background-color: #262626;
-    color: white;
-    padding: 10px;
-    border-radius: 15px;
-    margin: 5px 0;
-    max-width: 70%;
-    align-self: flex-start;
-}
-.input-contenedor {
-    position: fixed;
-    bottom: 10px;
-    width: 95%;
-    display: flex;
-    z-index: 1;
-}
-input[type="text"] {
-    flex: 1;
-    padding: 10px;
-    border-radius: 20px;
-    border: none;
-    background-color: #2C2C2C;
-    color: white;
-    margin-right: 10px;
-}
-button {
-    background-color: #25D366;
-    color: white;
-    border-radius: 15px;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-}
-</style>
+    <style>
+        body {
+            background-color: #ECE5DD;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.15);
+            height: 80vh;
+            display: flex;
+            flex-direction: column-reverse;
+            overflow-y: auto;
+        }
+        .user-msg {
+            background-color: #DCF8C6;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 5px 0;
+            text-align: right;
+        }
+        .bot-msg {
+            background-color: #F1F0F0;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 5px 0;
+            text-align: left;
+        }
+        .message-input {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        }
+        .stTextInput>div>div>input {
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            padding: 10px 15px;
+        }
+    </style>
 """, unsafe_allow_html=True)
 
-# contenedor de chat
-chat_container = st.container()
+# --- inicializar el estado ---
+if "mensajes" not in st.session_state:
+    st.session_state.mensajes = []
+    st.session_state.mensajes.append({
+        "autor": "bot",
+        "texto": "Hola Tomás, te he estado esperando... soy la IA de Bauti. "
+                 "El muchacho aunque sea colgado se esforzó bastante para crear todo esto que ves, "
+                 "así que espero que pueda aprobar. ¿Me querés preguntar algo?"
+    })
 
-def mostrar_chat():
-    with chat_container:
-        for chat in st.session_state.historial:
-            if chat["rol"] == "user":
-                st.markdown(f'<div class="burbuja-yo">{chat["mensaje"]}</div>', unsafe_allow_html=True)
-            else:
-                mensaje_limpio = chat["mensaje"].strip("*")
-                st.markdown(f'<div class="burbuja-ia">{mensaje_limpio}</div>', unsafe_allow_html=True)
+# --- funcion para generar respuestas del bot ---
+def responder(mensaje):
+    mensaje = mensaje.lower()
+    if "hola" in mensaje:
+        return "¡Hola! ¿Cómo estás? 😄"
+    elif "como estas" in mensaje or "cómo estás" in mensaje:
+        return "¡Genial! Estoy funcionando correctamente, gracias por preguntar. No tengo sentimientos como los humanos, pero siempre estoy acá para ayudarte. ¿Vos cómo estás?"
+    elif "bauti" in mensaje:
+        return "Bauti es mi creador 😎. Un poco colgado, pero con buenas ideas."
+    elif "adiós" in mensaje or "chau" in mensaje:
+        return "¡Chau! Fue un placer charlar con vos 👋"
+    else:
+        return "Interesante... contame un poco más sobre eso 🤔"
 
-mostrar_chat()
-
-# input de usuario
-st.markdown('<div class="input-contenedor">', unsafe_allow_html=True)
-mensaje = st.text_input("", key="mensaje_input", placeholder="Escribí tu mensaje y presioná Enter", value="")
-enviar = st.button("Enviar")
+# --- mostrar mensajes ---
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+for msg in reversed(st.session_state.mensajes):  # reversed para mostrar arriba como WhatsApp
+    if msg["autor"] == "user":
+        st.markdown(f"<div class='user-msg'>{msg['texto']}</div>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"<div class='bot-msg'>{msg['texto']}</div>", unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# función para procesar mensaje
-def procesar_mensaje(msg):
-    st.session_state.historial.append({"rol": "user", "mensaje": msg})
-    placeholder = st.empty()
-    placeholder.markdown('<div class="burbuja-ia">💬 La super IA de Bauti está pensando...</div>', unsafe_allow_html=True)
+# --- input del usuario ---
+with st.container():
+    mensaje_usuario = st.text_input("Escribí tu mensaje", key="input_mensaje", label_visibility="collapsed")
 
-    try:
-        resp = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "system", "content": "Sos buena onda y útil."}] +
-                     [{"role": h["rol"], "content": h["mensaje"]} for h in st.session_state.historial]
-        )
-        ia_msg = resp.choices[0].message.content.strip("*")
-        st.session_state.historial.append({"rol": "assistant", "mensaje": ia_msg})
-        placeholder.markdown(f'<div class="burbuja-ia">{ia_msg}</div>', unsafe_allow_html=True)
-    except Exception as e:
-        placeholder.error(f"Error: {e}")
-
-    mostrar_chat()
-
-# procesar input si hay mensaje
-if mensaje:
-    procesar_mensaje(mensaje)
-
-# scroll automático al último mensaje
-scroll_js = """
-<script>
-var chat = window.parent.document.querySelector('.chat-contenedor');
-if(chat){
-    chat.scrollTop = chat.scrollHeight;
-}
-</script>
-"""
-st.components.v1.html(scroll_js)
+    if mensaje_usuario:
+        st.session_state.mensajes.append({"autor": "user", "texto": mensaje_usuario})
+        respuesta_bot = responder(mensaje_usuario)
+        st.session_state.mensajes.append({"autor": "bot", "texto": respuesta_bot})
+        st.session_state.input_mensaje = ""  # Limpia el input
+        st.rerun()

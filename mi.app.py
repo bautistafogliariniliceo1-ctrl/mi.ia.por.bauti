@@ -7,13 +7,13 @@ st.title("🤖 IA Bauti Talentotech")
 api_key = st.secrets["GROQ_API_KEY"]
 client = Groq(api_key=api_key)
 
-# iniciar historial y agregar mensaje inicial de la IA
+# historial de la sesión y mensaje inicial de la IA
 if "historial" not in st.session_state:
     st.session_state.historial = [
         {"rol": "assistant", "mensaje": "Hola Tomás, te he estado esperando... soy la IA de Bauti. El muchacho aunque sea colgado se esforzó bastante para crear todo esto que ves, así que espero que pueda aprobar. ¿Me querés preguntar algo?"}
     ]
 
-# estilos tipo WhatsApp
+# estilos tipo warap
 st.markdown("""
 <style>
 .chat-contenedor {
@@ -79,17 +79,15 @@ for chat in st.session_state.historial:
         st.markdown(f'<div class="burbuja-ia">{mensaje_limpio}</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# barra de chat
+# barra de chat (input limpio cada vez)
 st.markdown('<div class="input-contenedor">', unsafe_allow_html=True)
-if "mensaje_input" not in st.session_state:
-    st.session_state.mensaje_input = ""
-mensaje = st.text_input("", key="mensaje_input", placeholder="Escribí tu mensaje y presioná Enter")
+mensaje_input = st.text_input("", key="mensaje_input", placeholder="Escribí tu mensaje y presioná Enter", value="")
 enviar = st.button("Enviar")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # procesar mensaje del usuario
-if mensaje:
-    st.session_state.historial.append({"rol": "user", "mensaje": mensaje})
+if mensaje_input:
+    st.session_state.historial.append({"rol": "user", "mensaje": mensaje_input})
     
     placeholder = st.empty()
     placeholder.markdown('<div class="burbuja-ia">💬 La super IA de Bauti está pensando...</div>', unsafe_allow_html=True)
@@ -105,5 +103,6 @@ if mensaje:
         placeholder.markdown(f'<div class="burbuja-ia">{ia_msg}</div>', unsafe_allow_html=True)
     except Exception as e:
         placeholder.error(f"Error: {e}")
-    
-    st.session_state.mensaje_input = ""
+
+    # el input se limpia usando value="" al recargar
+    st.experimental_rerun()  # esta es segura aquí porque ya terminó el ciclo

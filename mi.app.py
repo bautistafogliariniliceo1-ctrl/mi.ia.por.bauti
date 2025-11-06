@@ -7,17 +7,17 @@ st.title("🤖 IA Bauti Talentotech")
 api_key = st.secrets["GROQ_API_KEY"]
 client = Groq(api_key=api_key)
 
-# Inicializar historial con mensaje inicial de la IA
+# historial con mensaje inicial de la IA
 if "historial" not in st.session_state:
     st.session_state.historial = [
         {"rol": "assistant", "mensaje": "Hola Tomás, te he estado esperando... soy la IA de Bauti. El muchacho aunque sea colgado se esforzó bastante para crear todo esto que ves, así que espero que pueda aprobar. ¿Me querés preguntar algo?"}
     ]
 
-# Estilos tipo WhatsApp y scroll auto
+# estilos tipo warap
 st.markdown("""
 <style>
 .chat-contenedor {
-    max-height: 500px;
+    max-height: 70vh;
     overflow-y: auto;
     padding: 10px;
     display: flex;
@@ -70,27 +70,29 @@ button {
 </style>
 """, unsafe_allow_html=True)
 
-# Contenedor de chat con scroll automático
+# contenedor de chat
 chat_container = st.container()
-with chat_container:
-    for chat in st.session_state.historial:
-        if chat["rol"] == "user":
-            st.markdown(f'<div class="burbuja-yo">{chat["mensaje"]}</div>', unsafe_allow_html=True)
-        else:
-            mensaje_limpio = chat["mensaje"].strip("*")
-            st.markdown(f'<div class="burbuja-ia">{mensaje_limpio}</div>', unsafe_allow_html=True)
 
-# Barra de chat
+def mostrar_chat():
+    with chat_container:
+        for chat in st.session_state.historial:
+            if chat["rol"] == "user":
+                st.markdown(f'<div class="burbuja-yo">{chat["mensaje"]}</div>', unsafe_allow_html=True)
+            else:
+                mensaje_limpio = chat["mensaje"].strip("*")
+                st.markdown(f'<div class="burbuja-ia">{mensaje_limpio}</div>', unsafe_allow_html=True)
+
+mostrar_chat()
+
+# input de usuario
 st.markdown('<div class="input-contenedor">', unsafe_allow_html=True)
-if "mensaje_input" not in st.session_state:
-    st.session_state.mensaje_input = ""
 mensaje = st.text_input("", key="mensaje_input", placeholder="Escribí tu mensaje y presioná Enter", value="")
 enviar = st.button("Enviar")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Función para agregar mensaje del usuario y obtener respuesta de la IA
-def procesar_mensaje(mensaje):
-    st.session_state.historial.append({"rol": "user", "mensaje": mensaje})
+# función para procesar mensaje
+def procesar_mensaje(msg):
+    st.session_state.historial.append({"rol": "user", "mensaje": msg})
     placeholder = st.empty()
     placeholder.markdown('<div class="burbuja-ia">💬 La super IA de Bauti está pensando...</div>', unsafe_allow_html=True)
 
@@ -106,12 +108,13 @@ def procesar_mensaje(mensaje):
     except Exception as e:
         placeholder.error(f"Error: {e}")
 
-# Procesar input
+    mostrar_chat()
+
+# procesar input si hay mensaje
 if mensaje:
     procesar_mensaje(mensaje)
-    st.session_state.mensaje_input = ""
 
-# Script para hacer scroll automático al final del chat
+# scroll automático al último mensaje
 scroll_js = """
 <script>
 var chat = window.parent.document.querySelector('.chat-contenedor');

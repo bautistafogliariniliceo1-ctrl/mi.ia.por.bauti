@@ -7,9 +7,11 @@ st.title("🤖 IA Bauti Talentotech")
 api_key = st.secrets["GROQ_API_KEY"]
 client = Groq(api_key=api_key)
 
-# inicializar historial en la sesión
+# iniciar historial y agregar mensaje inicial de la IA
 if "historial" not in st.session_state:
-    st.session_state.historial = []
+    st.session_state.historial = [
+        {"rol": "assistant", "mensaje": "Hola Tomás, te he estado esperando... soy la IA de Bauti. El muchacho aunque sea colgado se esforzó bastante para crear todo esto que ves, así que espero que pueda aprobar. ¿Me querés preguntar algo?"}
+    ]
 
 # estilos tipo WhatsApp
 st.markdown("""
@@ -67,36 +69,41 @@ button {
 </style>
 """, unsafe_allow_html=True)
 
-# mostrar historial arriba de la barra de chat
+# mostrar historial arriba de la barra
 st.markdown('<div class="chat-contenedor">', unsafe_allow_html=True)
 for chat in st.session_state.historial:
     if chat["rol"] == "user":
         st.markdown(f'<div class="burbuja-yo">{chat["mensaje"]}</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'<div class="burbuja-ia">{chat["mensaje"]}</div>', unsafe_allow_html=True)
+        mensaje_limpio = chat["mensaje"].strip("*")
+        st.markdown(f'<div class="burbuja-ia">{mensaje_limpio}</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # barra de chat
 st.markdown('<div class="input-contenedor">', unsafe_allow_html=True)
+if "mensaje_input" not in st.session_state:
+    st.session_state.mensaje_input = ""
 mensaje = st.text_input("", key="mensaje_input", placeholder="Escribí tu mensaje y presioná Enter")
 enviar = st.button("Enviar")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# procesar mensaje
+# procesar mensaje del usuario
 if mensaje:
     st.session_state.historial.append({"rol": "user", "mensaje": mensaje})
     
     placeholder = st.empty()
     placeholder.markdown('<div class="burbuja-ia">💬 La super IA de Bauti está pensando...</div>', unsafe_allow_html=True)
-    
+
     try:
         resp = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=[{"role": "system", "content": "Sos una IA buena onda y útil."}] +
+            messages=[{"role": "system", "content": "Sos buena onda y útil."}] +
                      [{"role": h["rol"], "content": h["mensaje"]} for h in st.session_state.historial]
         )
-        ia_msg = resp.choices[0].message.content
+        ia_msg = resp.choices[0].message.content.strip("*")
         st.session_state.historial.append({"rol": "assistant", "mensaje": ia_msg})
         placeholder.markdown(f'<div class="burbuja-ia">{ia_msg}</div>', unsafe_allow_html=True)
     except Exception as e:
         placeholder.error(f"Error: {e}")
+    
+    st.session_state.mensaje_input = ""

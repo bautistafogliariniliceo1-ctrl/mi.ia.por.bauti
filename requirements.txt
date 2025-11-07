@@ -1,4 +1,2 @@
 streamlit
 groq
-streamlit
-openai>=1.0.0

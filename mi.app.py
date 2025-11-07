@@ -9,13 +9,20 @@ client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # Encabezado
 st.title("🤖 Bauti IA")
-st.write("Tu asistente inteligente creado con Groq 🚀")
+st.markdown("Tu asistente inteligente creado con Groq 🚀")
 
-# Inicializar el historial del chat en session_state
+# Inicializar historial del chat
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [
+        {
+            "role": "assistant",
+            "content": "Hola Tomás, te he estado esperando... soy la IA de Bauti. "
+                       "El muchacho, aunque sea colgado, se esforzó bastante para crear todo esto que ves, "
+                       "así que espero que pueda aprobar 😄. ¿Me querés preguntar algo?"
+        }
+    ]
 
-# Mostrar mensajes previos
+# Mostrar los mensajes previos
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -26,17 +33,25 @@ if prompt := st.chat_input("Escribí algo..."):
     st.chat_message("user").markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # Generar respuesta de la IA
-    with st.chat_message("assistant"):
-        with st.spinner("Pensando..."):
-            response = client.chat.completions.create(
-                model="llama3-8b-8192",
-                messages=[
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.messages
-                ],
-            )
-            reply = response.choices[0].message.content
-            st.markdown(reply)
-    # Guardar respuesta
-    st.session_state.messages.append({"role": "assistant", "content": reply})
+    # Generar respuesta con Groq
+    try:
+        with st.chat_message("assistant"):
+            with st.spinner("Pensando..."):
+                response = client.chat.completions.create(
+                    model="llama3-70b-8192",  # modelo más potente y estable
+                    messages=[
+                        {"role": m["role"], "content": m["content"]}
+                        for m in st.session_state.messages
+                    ],
+                    temperature=0.8,
+                    max_tokens=512,
+                )
+
+                reply = response.choices[0].message.content.strip()
+                st.markdown(reply)
+
+        # Guardar respuesta
+        st.session_state.messages.append({"role": "assistant", "content": reply})
+
+    except Exception as e:
+        st.error(f"⚠️ Error al generar respuesta: {e}")

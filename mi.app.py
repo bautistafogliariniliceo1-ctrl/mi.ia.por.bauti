@@ -16,9 +16,11 @@ if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "assistant",
-            "content": "Hola Tomás, te he estado esperando... soy la IA de Bauti. "
-                       "El muchacho, aunque sea colgado, se esforzó bastante para crear todo esto que ves, "
-                       "así que espero que pueda aprobar 😄. ¿Me querés preguntar algo?"
+            "content": (
+                "Hola Tomás, te he estado esperando... soy la IA de Bauti. "
+                "El muchacho, aunque sea colgado, se esforzó bastante para crear todo esto que ves, "
+                "así que espero que pueda aprobar 😄. ¿Me querés preguntar algo?"
+            )
         }
     ]
 
@@ -38,7 +40,7 @@ if prompt := st.chat_input("Escribí algo..."):
         with st.chat_message("assistant"):
             with st.spinner("Pensando..."):
                 response = client.chat.completions.create(
-                    model="llama3-70b-8192",  # modelo más potente y estable
+                    model="llama3-8b-8192",  # Modelo activo recomendado según documentación :contentReference[oaicite:1]{index=1}
                     messages=[
                         {"role": m["role"], "content": m["content"]}
                         for m in st.session_state.messages
@@ -46,7 +48,6 @@ if prompt := st.chat_input("Escribí algo..."):
                     temperature=0.8,
                     max_tokens=512,
                 )
-
                 reply = response.choices[0].message.content.strip()
                 st.markdown(reply)
 

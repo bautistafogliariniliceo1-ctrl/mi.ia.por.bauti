@@ -40,7 +40,7 @@ if prompt := st.chat_input("Escribí algo..."):
         with st.chat_message("assistant"):
             with st.spinner("Pensando..."):
                 response = client.chat.completions.create(
-                    model="llama3-8b-8192",  # Modelo activo recomendado según documentación :contentReference[oaicite:1]{index=1}
+                    model="llama-3.3-70b-versatile",  # Modelo activo recomendado según documentación :contentReference[oaicite:1]{index=1}
                     messages=[
                         {"role": m["role"], "content": m["content"]}
                         for m in st.session_state.messages
@@ -56,3 +56,4 @@ if prompt := st.chat_input("Escribí algo..."):
 
     except Exception as e:
         st.error(f"⚠️ Error al generar respuesta: {e}")
+
